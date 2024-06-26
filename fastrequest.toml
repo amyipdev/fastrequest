@@ -1,0 +1,9 @@
+# NOTE: paths starting with '.' are relative to the source directory
+
+[settings]
+secrets_file = "./secrets/credentials.toml"
+use_env_secrets = false
+
+[ssl]
+cert = "./secrets/cert.pem"
+key = "./secrets/key.pem"
