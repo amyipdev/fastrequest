@@ -13,11 +13,12 @@ use std::env;
 
 #[allow(unused_imports)]
 use log::{debug, error, info, trace, warn};
-use rocket::{Build, Rocket, fs::relative};
+use rocket::{config::TlsConfig, data::ToByteUnit, fs::relative, Build, Rocket};
 
 #[launch]
 fn rocket_main() -> Rocket<Build> {
     pretty_env_logger::init();
+    trace!("initialized logger");
 
     // NOTE: Nix builds will need to pass FRQ_BUILD_DIST
     // Find dist/ folder with Svelte compilation results
@@ -35,10 +36,12 @@ fn rocket_main() -> Rocket<Build> {
     } else {
         let p = relative!("dist");
         if !pexi(p) {
-            erxit("could not find dist folder in source tree\ndid the svelte build run?");
+            error!("could not find dist folder in source tree");
+            erxit("did the svelte build run?");
         }
         p
     };
+    debug!("located dist at {}", dist);
 
     let conf = config::load_config();
 
@@ -47,4 +50,11 @@ fn rocket_main() -> Rocket<Build> {
     // CORS fairings (accept types, accurate clock)
     // Shared state for database
     rocket::build()
+        .configure(rocket::Config {
+            port: conf.settings.port,
+            address: "::".parse::<std::net::IpAddr>().unwrap(),
+            limits: rocket::data::Limits::new().limit("bytes", 32.kibibytes()),
+            tls: Some(TlsConfig::from_paths(conf.ssl.cert, conf.ssl.key)),
+            ..rocket::Config::release_default()
+        })
 }

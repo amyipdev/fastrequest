@@ -3,6 +3,7 @@
 [settings]
 secrets_file = "./secrets/credentials.toml"
 use_env_secrets = false
+port = 8080
 
 [ssl]
 cert = "./secrets/cert.pem"

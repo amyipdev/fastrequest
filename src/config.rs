@@ -26,6 +26,7 @@ pub struct SslConfig {
 pub struct GeneralConfig {
     pub secrets_file: Option<String>,
     pub use_env_secrets: bool,
+    pub port: u16
 }
 
 // Loads and verifies configuration
