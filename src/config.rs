@@ -63,6 +63,9 @@ pub fn load_config() -> Config {
         if ptr.chars().next() == Some('.') {
             *ptr = [base, ptr].join("");
         }
+        if !pexi(ptr) {
+            erxits(format!{"declared file {} does not exist", ptr});
+        }
     }
     for optr in [&mut config.settings.secrets_file] {
         *optr = Some(
@@ -79,7 +82,12 @@ pub fn load_config() -> Config {
                 },
             ]
             .join(""),
-        )
+        );
+        if let Some(p) = optr {
+            if !pexi(p) {
+                erxits(format!("declared file {} does not exist", p));
+            }
+        }
     }
 
     // Verify credentials exist for all enabled modes
