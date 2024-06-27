@@ -27,7 +27,7 @@ use rocket::{
 };
 
 #[launch]
-fn rocket_main() -> Rocket<Build> {
+async fn rocket_main() -> Rocket<Build> {
     if env::var("RUST_LOG").is_err() {
         env::set_var(
             "RUST_LOG",
@@ -66,8 +66,11 @@ fn rocket_main() -> Rocket<Build> {
 
     let conf = config::Config::load_config();
     trace!("configuration loaded");
+    let secrets = config::Secrets::new(&conf).unwrap_or_else(|e| {debug!("{}", e); erxit("failed to load secrets")});
+    trace!("secrets loaded");
 
     // Set up database, verify credentials
+    let db = dbms::new(&conf, &secrets).await.unwrap_or_else(|e| {debug!("{}", e); erxit("failed to initialize the database")});
 
     // NOTE: for the future, versions of FastRequest
     // PE = People's Edition, for sending requests to lots of agencies
