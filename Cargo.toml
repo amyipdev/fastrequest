@@ -6,7 +6,13 @@ edition = "2021"
 [dependencies]
 log = "0.4.21"
 pretty_env_logger = "0.5.0"
-rocket = { version = "0.5.1", features = ["json", "tls"] }
 serde = "1.0.203"
 serde_derive = "1.0.203"
 toml = "0.8.14"
+
+# TODO: once rocket 0.6 releases, change this to stable/crates
+# move back into regular dependency list
+[dependencies.rocket]
+git = "https://github.com/rwf2/Rocket"
+rev = "fb4b63040595077f83039cf00c73275c8283ab2d"
+features = ["http3-preview", "json", "tls"]

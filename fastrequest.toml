@@ -3,8 +3,19 @@
 [settings]
 secrets_file = "./secrets/credentials.toml"
 use_env_secrets = false
-port = 8080
+port = 4433
+url = "https://[::]:4433"
 
 [ssl]
 cert = "./secrets/cert.pem"
 key = "./secrets/key.pem"
+
+# database credentials in secrets
+[db]
+# TODO: mongddodb support?
+# one of "mysql" (covers MariaDB), "postgresql", "sqlite"
+dbms = "mysql"
+username = "fastrequest"
+database = "fastrequest_dev"
+address = "10.2.0.3"
+port = 3306
