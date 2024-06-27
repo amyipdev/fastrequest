@@ -12,6 +12,8 @@ use utils::*;
 
 use std::env;
 
+use sea_orm_rocket::Database;
+
 #[allow(unused_imports)]
 use log::{debug, error, info, trace, warn};
 use rocket::{
@@ -66,11 +68,11 @@ async fn rocket_main() -> Rocket<Build> {
 
     let conf = config::Config::load_config();
     trace!("configuration loaded");
-    let secrets = config::Secrets::new(&conf).unwrap_or_else(|e| {debug!("{}", e); erxit("failed to load secrets")});
+    let secrets = config::Secrets::new(&conf).unwrap_or_else(|e| {
+        debug!("{}", e);
+        erxit("failed to load secrets")
+    });
     trace!("secrets loaded");
-
-    // Set up database, verify credentials
-    let db = dbms::new(&conf, &secrets).await.unwrap_or_else(|e| {debug!("{}", e); erxit("failed to initialize the database")});
 
     // NOTE: for the future, versions of FastRequest
     // PE = People's Edition, for sending requests to lots of agencies
@@ -87,14 +89,18 @@ async fn rocket_main() -> Rocket<Build> {
     info!("Using protocols HTTP3/udp, HTTP2/tcp, HTTP1.1/tcp");
     rocket::custom(
         Figment::from(rocket::Config::release_default())
-            .merge(("tls", TlsConfig::from_paths(conf.ssl.cert, conf.ssl.key)))
+            .merge(("tls", TlsConfig::from_paths(&conf.ssl.cert, &conf.ssl.key)))
             .merge(("port", conf.settings.port))
-            .merge(("address", "::".parse::<std::net::IpAddr>().unwrap())),
+            .merge(("address", "::".parse::<std::net::IpAddr>().unwrap()))
+            .merge(("databases.fastrequest.url", dbms::get_url(&conf, &secrets))),
     )
+    .attach(dbms::Db::init())
     .attach(Shield::default().enable(Hsts::Preload(Duration::days(730))))
     .attach(CORS {
         url: conf.settings.url,
     })
+    // TODO: .register("/", catchers![not_found, ...])
+    // TODO: .attach(AdHoc::try_on_ignite("Migrations", run_migrations))
     .mount("/", FileServer::from(dist))
     .mount("/", routes![index])
     .manage(dist.to_string() as DistHolder)

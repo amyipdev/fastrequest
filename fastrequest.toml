@@ -12,8 +12,8 @@ key = "./secrets/key.pem"
 
 # database credentials in secrets
 [db]
-# TODO: mongddodb support?
-# one of "mysql" (covers MariaDB), "postgresql", "sqlite"
+# TODO: mongodb support?
+# one of "mysql" (covers MariaDB), "postgres", "sqlite"
 # if sqlite, set username, address, port to blank values,
 # and set the database to the file path (not relative!)
 dbms = "mysql"

@@ -17,3 +17,9 @@ toml = "0.8.14"
 git = "https://github.com/rwf2/Rocket"
 rev = "fb4b63040595077f83039cf00c73275c8283ab2d"
 features = ["http3-preview", "json", "tls"]
+
+# Manual patch override because sea-orm-rocket only supports 0.5, not 0.6-dev...
+# When Rocket 0.6 drops, also TODO need to change this to crates 0.6
+[dependencies.sea-orm-rocket]
+git = "https://github.com/amyipdev/sea-orm"
+branch = "rocket-0.6.0-dev"
