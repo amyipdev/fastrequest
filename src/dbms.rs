@@ -5,15 +5,22 @@ use crate::utils::*;
 use std::time::Duration;
 
 use sea_orm::{ConnectOptions, DatabaseConnection, DbErr};
+use sea_orm_migration::MigratorTrait;
 use sea_orm_rocket::rocket::figment::Figment;
 
 #[derive(sea_orm_rocket::Database, Debug)]
 #[database("fastrequest")]
 pub struct Db(SeaOrmPool);
 
+impl Db {
+    pub fn conn(&self) -> &DatabaseConnection {
+        &self.0.conn
+    }
+}
+
 #[derive(Debug)]
 pub struct SeaOrmPool {
-    pub conn: DatabaseConnection
+    pub conn: DatabaseConnection,
 }
 
 #[async_trait]
@@ -37,14 +44,18 @@ impl sea_orm_rocket::Pool for SeaOrmPool {
         if let Some(idle_timeout) = config.idle_timeout {
             options.idle_timeout(Duration::from_secs(idle_timeout));
         }
-        Ok(SeaOrmPool { conn: sea_orm::Database::connect(options).await? })
+        let conn = sea_orm::Database::connect(options).await?;
+        crate::migrator::Migrator::up(&conn, None)
+            .await
+            .unwrap_or_else(|e| {
+                log::error!("{}", e);
+                erxit("failed to apply migrations to database");
+            });
+        Ok(SeaOrmPool { conn })
     }
 }
 
-pub fn get_url(
-    conf: &crate::config::Config,
-    secrets: &crate::config::Secrets,
-) -> String {
+pub fn get_url(conf: &crate::config::Config, secrets: &crate::config::Secrets) -> String {
     let mut url = String::from(&conf.db.dbms);
     url.push_str("://");
     if conf.db.dbms != "sqlite" {

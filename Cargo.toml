@@ -7,8 +7,10 @@ edition = "2021"
 log = "0.4.21"
 pretty_env_logger = "0.5.0"
 sea-orm = { version = "0.12.15", features = ["runtime-tokio-rustls", "sqlx-mysql", "sqlx-sqlite", "sqlx-postgres"] }
+sea-orm-migration = "0.12.15"
 serde = "1.0.203"
 serde_derive = "1.0.203"
+terminal-link = "0.1.0"
 toml = "0.8.14"
 
 # TODO: once rocket 0.6 releases, change this to stable/crates
@@ -23,3 +25,11 @@ features = ["http3-preview", "json", "tls"]
 [dependencies.sea-orm-rocket]
 git = "https://github.com/amyipdev/sea-orm"
 branch = "rocket-0.6.0-dev"
+
+[dependencies.rocket_async_compression]
+git = "https://github.com/amyipdev/rocket_async_compression"
+branch = "rocket-0.6-dev"
+
+[build-dependencies]
+glob = "0.3.1"
+chrono = "0.4.38"

@@ -6,13 +6,12 @@ extern crate rocket;
 mod config;
 mod consts;
 mod dbms;
+mod migrator;
 mod utils;
 
 use utils::*;
 
 use std::env;
-
-use sea_orm_rocket::Database;
 
 #[allow(unused_imports)]
 use log::{debug, error, info, trace, warn};
@@ -27,6 +26,8 @@ use rocket::{
     time::Duration,
     Build, Request, Response, Rocket, State,
 };
+use rocket_async_compression::CachedCompression;
+use sea_orm_rocket::Database;
 
 #[launch]
 async fn rocket_main() -> Rocket<Build> {
@@ -80,13 +81,15 @@ async fn rocket_main() -> Rocket<Build> {
     info!("FastRequest PE v{}", env!("CARGO_PKG_VERSION"));
     info!("Copyright (c) 2024 Open Information Collective, licensed under AGPLv3");
 
+    let terminal_url_link: String = format!("https://[::]:{}", conf.settings.port);
     // CORS fairings (accept types, accurate clock)
     // Shared state for database
     info!(
-        "Launching Rocket server on https://[::]:{}/",
-        conf.settings.port
+        "Launching Rocket server on {}",
+        terminal_link::Link::new(&terminal_url_link, &terminal_url_link)
     );
     info!("Using protocols HTTP3/udp, HTTP2/tcp, HTTP1.1/tcp");
+    warn!("HTTP/3 support may throw benign errors; it is not yet stable");
     rocket::custom(
         Figment::from(rocket::Config::release_default())
             .merge(("tls", TlsConfig::from_paths(&conf.ssl.cert, &conf.ssl.key)))
@@ -98,6 +101,19 @@ async fn rocket_main() -> Rocket<Build> {
     .attach(Shield::default().enable(Hsts::Preload(Duration::days(730))))
     .attach(CORS {
         url: conf.settings.url,
+    })
+    .attach(CachedCompression {
+        cached_paths: vec!["".to_owned(), "/".to_owned(), "/index.html".to_owned()],
+        cached_path_suffixes: vec![
+            ".js".to_owned(),
+            ".css".to_owned(),
+            ".html".to_owned(),
+            ".png".to_owned(),
+            ".jpg".to_owned(),
+            ".svg".to_owned(),
+        ],
+        excluded_path_prefixes: vec!["/api/".to_string()],
+        ..Default::default()
     })
     // TODO: .register("/", catchers![not_found, ...])
     // TODO: .attach(AdHoc::try_on_ignite("Migrations", run_migrations))
