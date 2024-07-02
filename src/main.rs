@@ -6,6 +6,7 @@ extern crate rocket;
 mod config;
 mod consts;
 mod dbms;
+mod entities;
 mod migrator;
 mod utils;
 

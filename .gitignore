@@ -28,3 +28,7 @@ target
 
 # Nix
 result
+
+# SQLite
+*.db
+*.tmpdb

@@ -19,7 +19,8 @@ macro_rules! relative {
     };
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo::rerun-if-changed=NEVER_EXISTING_FILE");
 
     // install dependencies
@@ -67,6 +68,46 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
     f.write_all(b"        ]\n    }\n}")?;
     f.flush()?;
+
+    Command::new("cargo")
+        .arg("run")
+        .arg("--release")
+        .current_dir(relative!("utils/migrator-entity-generator"))
+        .status()?;
+    // TODO: generate entity using sea_orm_cli CRATE (NOT the command)
+    std::fs::create_dir_all(relative!("src/entities"))?;
+    sea_orm_cli::commands::generate::run_generate_command(
+        sea_orm_cli::GenerateSubcommands::Entity {
+            compact_format: false,
+            expanded_format: false,
+            include_hidden_tables: false,
+            tables: vec![],
+            ignore_tables: vec!["seaql_migrations".to_owned()],
+            max_connections: 1,
+            output_dir: relative!("src/entities").to_owned(),
+            database_schema: "public".to_owned(),
+            database_url: concat!(
+                "sqlite://",
+                env!("CARGO_MANIFEST_DIR"),
+                "/.entity-gen-migr.tmpdb"
+            )
+            .to_owned(),
+            with_serde: "none".to_owned(),
+            serde_skip_deserializing_primary_key: false,
+            serde_skip_hidden_column: false,
+            with_copy_enums: false,
+            date_time_crate: sea_orm_cli::DateTimeCrate::Chrono,
+            lib: false,
+            model_extra_derives: vec![],
+            model_extra_attributes: vec![],
+            enum_extra_derives: vec![],
+            enum_extra_attributes: vec![],
+            seaography: false,
+        },
+        false,
+    )
+    .await?;
+    std::fs::remove_file(relative!(".entity-gen-migr.tmpdb"))?;
 
     Ok(())
 }

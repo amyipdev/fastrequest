@@ -1,0 +1,9 @@
+[package]
+name = "migrator-entity-generator"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sea-orm = { version = "0.12.15", features = ["runtime-tokio-rustls", "sqlx-mysql", "sqlx-sqlite", "sqlx-postgres"] }
+sea-orm-migration = "0.12.15"
+tokio = { version = "1.38.0", features = ["macros", "rt", "rt-multi-thread", "tokio-macros"] }
