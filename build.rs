@@ -2,7 +2,7 @@
 
 use std::fs::OpenOptions;
 use std::io::Write;
-use std::process::Command;
+use std::process::{Command, ExitStatus};
 
 use chrono;
 
@@ -24,10 +24,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("cargo::rerun-if-changed=NEVER_EXISTING_FILE");
 
     // install dependencies
-    Command::new("npm").arg("i").status()?;
+    Command::new("npm").arg("i").status()?.eok()?;
 
     // Build Svelte
-    Command::new("npm").arg("run").arg("build").status()?;
+    Command::new("npm").arg("run").arg("build").status()?.eok()?;
 
     // Dynamically regenerate the Migrator
     // TODO: make a script for automatically generating the mRS files
@@ -73,7 +73,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .arg("run")
         .arg("--release")
         .current_dir(relative!("utils/migrator-entity-generator"))
-        .status()?;
+        .status()?
+        .eok()?;
     // TODO: generate entity using sea_orm_cli CRATE (NOT the command)
     std::fs::create_dir_all(relative!("src/entities"))?;
     sea_orm_cli::commands::generate::run_generate_command(
@@ -111,3 +112,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     Ok(())
 }
+
+// Stable override for exit_ok()
+// Once exit_status_error (#84908) is stable, this can be removed
+// and all .eok()s replaced with exit_ok()
+trait ExitConversion {
+    fn eok(&self) -> Result<(), ExitStatErr>;
+}
+#[derive(PartialEq, Eq, Clone, Copy, Debug)]
+struct ExitStatErr(ExitStatus);
+impl ExitConversion for ExitStatus {
+    fn eok(&self) -> Result<(), ExitStatErr> {
+        if self.success() {
+            Ok(())
+        } else {
+            Err(ExitStatErr(*self))
+        }
+    }
+}
+impl std::fmt::Display for ExitStatErr {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "process exited unsuccesfully: {}", self.0)
+    }
+}
+impl std::error::Error for ExitStatErr {}
