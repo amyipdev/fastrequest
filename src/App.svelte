@@ -16,7 +16,7 @@
 
 <main class="bg-gray-900">
     {#if viewportComponent == views[currentView]}
-        <div id="viewport" on:outroend{updateViewportComponent} transition:fade>
+        <div id="viewport" on:outroend={updateViewportComponent} transition:fade>
             <svelte:component this={viewportComponent} />
         </div>
     {/if}
