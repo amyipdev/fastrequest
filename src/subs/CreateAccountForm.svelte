@@ -94,7 +94,7 @@
                 </button>
             </Input>
         </div>
-        <Popover class="text-sm" triggered-by="#password" placement="bottom">
+        <Popover class="text-sm" triggered-by="#password" placement="bottom" style="z-index: 1050">
             <h3 class="font-semibold mb-1">Your password is {passwordStrength}</h3>
             <div class="grid grid-cols-3 gap-2 my-2">
                 <!-- TODO: dynamic colors -->

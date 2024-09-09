@@ -19,5 +19,5 @@ key = "./secrets/key.pem"
 dbms = "mysql"
 username = "fastrequest"
 database = "fastrequest_dev"
-address = "127.0.0.1"
+address = "10.2.0.3"
 port = 3306
